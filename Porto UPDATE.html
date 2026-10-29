@@ -46,19 +46,26 @@ body::after{
 
 /* ===== CURSOR ===== */
 @media (pointer:fine){ body,a,button,[data-cursor]{cursor:none} }
-.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:10000;will-change:transform}
+.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:10050;will-change:transform}
 .cursor-dot{width:6px;height:6px;border-radius:50%;background:var(--ink)}
 .cursor-ring{
-  width:40px;height:40px;border-radius:50%;z-index:9999;
+  width:40px;height:40px;border-radius:50%;z-index:10049;
   border:1.5px solid rgba(10,10,15,.35);
   display:grid;place-items:center;
-  transition:background .3s,border-color .3s;
+  transition:background .3s,border-color .3s,width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1);
 }
 .cursor-ring span{
-  font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;
   text-transform:uppercase;color:#fff;opacity:0;transition:opacity .2s;
+  white-space:nowrap;line-height:1;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:geometricPrecision;
 }
-.cursor-ring.has-label{background:var(--ink);border-color:var(--ink)}
+.cursor-ring.has-label{
+  width:86px;height:86px;
+  background:var(--ink);border-color:var(--ink);
+}
 .cursor-ring.has-label span{opacity:1}
 @media (pointer:coarse){.cursor-dot,.cursor-ring{display:none}}
 
@@ -100,8 +107,8 @@ body::after{
   transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;will-change:transform;
 }
 .tool:hover{transform:translateY(-7px) scale(1.09);box-shadow:0 20px 44px rgba(37,99,235,.18),inset 0 1px 0 #fff;border-color:rgba(37,99,235,.4);z-index:5}
-.tool img{width:38px;height:38px;object-fit:contain;filter:grayscale(100%) contrast(.88);opacity:.7;transition:filter .35s,opacity .35s,transform .35s}
-.tool:hover img{filter:grayscale(0) contrast(1);opacity:1;transform:scale(1.1)}
+.tool img,.tool svg{width:38px;height:38px;object-fit:contain;filter:grayscale(0) contrast(1);opacity:1;transition:filter .35s,opacity .35s,transform .35s}
+.tool:hover img,.tool:hover svg{filter:grayscale(100%) contrast(.88);opacity:.7;transform:scale(1.1)}
 .tool .tool-name{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap;pointer-events:none}
 .tool:hover .tool-name{opacity:1;transform:translate(-50%,-4px)}
 @keyframes floatTool{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
@@ -112,16 +119,94 @@ body::after{
 
 /* ===== CERTIFICATIONS ===== */
 .cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.cert-card{padding:22px;display:flex;flex-direction:column;gap:8px;border-radius:20px}
-.cert-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;line-height:1.3}
+.cert-card{
+  padding:0;display:flex;flex-direction:column;gap:0;border-radius:20px;
+  overflow:hidden;width:100%;text-align:left;cursor:pointer;border:none;background:inherit;
+}
+.cert-thumb{aspect-ratio:16/10;background:rgba(10,10,15,.04);overflow:hidden;position:relative}
+.cert-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.cert-card:hover .cert-thumb img{transform:scale(1.05)}
+.cert-thumb--empty{display:grid;place-items:center;padding:20px}
+.cert-thumb--empty span{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);text-align:center;line-height:1.6;
+}
+.cert-badge{
+  position:absolute;top:12px;right:12px;padding:5px 8px;border-radius:999px;
+  background:rgba(10,10,15,.72);color:#fff;font-family:var(--font-mono);
+  font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+}
+.cert-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.cert-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;line-height:1.3;text-align:justify;text-justify:inter-word}
 .cert-issuer{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
-.cert-year{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:auto;padding-top:12px}
+.cert-year{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:auto;padding-top:10px}
+
+.cert-modal{
+  position:fixed;inset:0;z-index:10020;display:none;align-items:center;justify-content:center;
+  padding:24px;
+}
+.cert-modal.is-open{display:flex}
+.cert-modal-backdrop{position:absolute;inset:0;background:rgba(10,10,15,.55);backdrop-filter:blur(10px)}
+.cert-modal-dialog{
+  position:relative;z-index:1;width:min(1080px,100%);max-height:min(90vh,920px);
+  display:grid;grid-template-columns:1.15fr .85fr;overflow:hidden;
+  background:var(--bg-2);border:1px solid var(--stroke);border-radius:28px;
+  box-shadow:0 30px 80px rgba(10,10,15,.22);
+}
+.cert-modal-media{
+  position:relative;background:#111;display:flex;align-items:center;justify-content:center;min-height:280px;
+}
+.cert-modal-media img{max-width:100%;max-height:78vh;width:auto;height:auto;object-fit:contain}
+.cert-modal-empty{
+  color:rgba(255,255,255,.7);font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;text-align:center;padding:40px;
+}
+.cert-modal-nav{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:12px;
+  pointer-events:none;
+}
+.cert-modal-nav button{
+  pointer-events:auto;width:40px;height:40px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.92);color:var(--ink);cursor:pointer;font-size:18px;
+}
+.cert-modal-nav button:disabled{opacity:.3;pointer-events:none}
+.cert-modal-count{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-mono);font-size:11px;color:#fff;background:rgba(10,10,15,.55);
+  padding:4px 10px;border-radius:999px;
+}
+.cert-modal-copy{padding:28px 28px 32px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.cert-modal-copy h3{font-family:var(--font-display);font-size:1.45rem;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+.cert-modal-meta{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.cert-modal-desc{color:var(--muted);font-size:14.5px;line-height:1.7;text-align:justify;text-justify:inter-word}
+.cert-modal-desc p{margin:0 0 10px;text-align:justify;text-justify:inter-word}
+.cert-modal-desc ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:8px}
+.cert-modal-desc li{text-align:justify;text-justify:inter-word}
+.cert-modal-link{
+  display:none;align-self:flex-start;margin-top:8px;
+  padding:9px 14px;border-radius:999px;border:1px solid rgba(37,99,235,.28);
+  background:rgba(37,99,235,.1);color:var(--accent);
+  font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  transition:background .3s,color .3s,transform .3s;
+}
+.cert-modal-link.is-visible{display:inline-flex;align-items:center;gap:8px}
+.cert-modal-link:hover{background:var(--accent);color:#fff;transform:translateY(-2px)}
+.cert-modal-close{
+  position:absolute;top:14px;right:14px;z-index:2;width:40px;height:40px;border:none;border-radius:50%;
+  background:rgba(10,10,15,.08);color:var(--ink);cursor:pointer;font-size:22px;line-height:1;
+}
+@media (max-width:820px){
+  .cert-modal{padding:12px}
+  .cert-modal-dialog{grid-template-columns:1fr;max-height:92vh}
+  .cert-modal-media img{max-height:42vh}
+  .cert-modal-copy{padding:20px}
+}
 
 @media (max-width:700px){
   .tools-section{padding:70px 20px}
   .tools-note{text-align:left}
   .tool{width:68px;height:68px;border-radius:18px}
-  .tool img{width:30px;height:30px}
+  .tool img,.tool svg{width:30px;height:30px}
   .tool .tool-name{display:none}
 }
 /* ===== GLASS ===== */
@@ -273,6 +358,8 @@ main{position:relative;z-index:1}
 .img-slot .ph svg{opacity:.4}
 .img-slot .ph small{font-size:9px;letter-spacing:.08em;text-transform:none;color:rgba(10,10,15,.3)}
 .logo-slot{width:64px;height:64px;flex:none;border-radius:16px}
+.logo-slot.has-img{background:#fff;padding:6px}
+.logo-slot img{object-fit:contain}
 .logo-slot .ph{gap:0;padding:6px;font-size:8px;letter-spacing:.08em}
 .logo-slot .ph small,.logo-slot .ph svg{display:none}
 
@@ -304,10 +391,10 @@ main{position:relative;z-index:1}
 .about-lead strong{font-weight:700}
 .about-detail{display:flex;flex-direction:column;gap:18px;color:var(--muted);font-size:25px;line-height:1.8}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.stat{padding:24px;border-radius:22px;display:flex;flex-direction:column;gap:6px}
-.stat strong{font-family:var(--font-display);font-size:2.2rem;font-weight:300;letter-spacing:-.03em;line-height:1}
+.stat{padding:26px;border-radius:22px;display:flex;flex-direction:column;gap:8px}
+.stat strong{font-family:var(--font-display);font-size:2.75rem;font-weight:300;letter-spacing:-.03em;line-height:1}
 .stat strong .accent{color:var(--accent);font-weight:700}
-.stat span{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat span{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 
 /* ===== SPOTLIGHT / TILT ===== */
 .spotlight{position:relative;overflow:hidden;transform-style:preserve-3d}
@@ -337,9 +424,13 @@ main{position:relative;z-index:1}
 .project{
   width:min(80vw,880px);flex:none;
   display:grid;grid-template-columns:1.12fr .88fr;
-  padding:12px;border-radius:30px;
+  align-items:center;padding:12px;border-radius:30px;
 }
-.project .img-slot{height:100%;min-height:380px;border-radius:22px}
+.project .img-slot{
+  height:auto;min-height:0;max-height:240px;aspect-ratio:4/3;border-radius:22px;
+  background:rgba(10,10,15,.04);display:grid;place-items:center;
+}
+.project .img-slot img{object-fit:contain}
 .project-body{padding:26px 24px;display:flex;flex-direction:column}
 .project-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .project-tags span{
@@ -350,14 +441,22 @@ main{position:relative;z-index:1}
 .project h3{font-family:var(--font-display);font-size:clamp(1.3rem,2vw,1.7rem);font-weight:400;line-height:1.15;letter-spacing:-.02em;margin-bottom:10px}
 .project h3 strong{font-weight:800}
 .project-meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--accent);margin-bottom:16px;font-weight:500}
-.project-desc{color:var(--muted);font-size:13.5px;line-height:1.7;flex:1}
+.project-desc{color:var(--muted);font-size:13.5px;line-height:1.7;flex:1;text-align:justify;text-justify:inter-word}
+.project-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:22px}
 .project-link{
   display:inline-flex;align-items:center;gap:8px;margin-top:22px;
   font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--ink);font-weight:500;
 }
+.project-actions .project-link{margin-top:0}
+.project-link-ext{
+  padding:8px 12px;border-radius:999px;border:1px solid rgba(37,99,235,.28);
+  background:rgba(37,99,235,.1);color:var(--accent);font-weight:600;
+  transition:background .3s,color .3s,transform .3s;
+}
+.project-link-ext:hover{background:var(--accent);color:#fff;transform:translateY(-2px)}
 .project-link span{transition:transform .3s}
-.project:hover .project-link span{transform:translate(3px,-3px)}
+.project:hover .project-link:not(.project-link-ext) span{transform:translate(3px,-3px)}
 .project:hover .img-slot img{transform:scale(1.04)}
 .project .img-slot img{transition:transform .8s cubic-bezier(.2,.8,.2,1)}
 
@@ -368,7 +467,15 @@ main{position:relative;z-index:1}
 .xp-meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
 .xp-copy h3{font-family:var(--font-display);font-size:1.25rem;font-weight:400;letter-spacing:-.01em;line-height:1.3}
 .xp-copy h3 strong{font-weight:700}
-.xp-copy p:last-child{color:var(--muted);font-size:14px;line-height:1.7;max-width:760px}
+.xp-copy > p:not(.xp-meta){color:var(--muted);font-size:14px;line-height:1.7;max-width:760px}
+.xp-cert-btn{
+  display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:8px;
+  padding:9px 14px;border-radius:999px;border:1px solid rgba(37,99,235,.28);
+  background:rgba(37,99,235,.1);color:var(--accent);
+  font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:transform .3s,background .3s,box-shadow .3s;
+}
+.xp-cert-btn:hover{transform:translateY(-2px);background:var(--accent);color:#fff;box-shadow:0 10px 22px rgba(37,99,235,.28)}
 
 /* ===== CONTACT ===== */
 .contact{position:relative;max-width:1280px;margin:0 auto;padding:150px 24px 80px}
@@ -390,8 +497,20 @@ main{position:relative;z-index:1}
 }
 .email-link:hover{color:var(--accent);border-color:var(--accent)}
 .email-link span{font-size:.55em;color:var(--accent)}
-.contact-links{display:flex;gap:24px;margin-top:52px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.contact-links a:hover{color:var(--ink)}
+.contact-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:52px}
+.contact-links a{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:12px 18px;border-radius:999px;
+  font-family:var(--font-mono);font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid transparent;color:#fff;
+  transition:transform .3s,box-shadow .3s,filter .3s;
+}
+.contact-links a svg{width:16px;height:16px;flex:none}
+.contact-links a:hover{transform:translateY(-3px);filter:brightness(1.08)}
+.contact-link-linkedin{background:#0A66C2;box-shadow:0 10px 24px rgba(10,102,194,.28)}
+.contact-link-github{background:#171717;box-shadow:0 10px 24px rgba(10,10,15,.22)}
+.contact-link-cv{background:var(--accent);box-shadow:0 10px 24px rgba(37,99,235,.32)}
 .footer{
   max-width:1280px;margin:0 auto;padding:28px 24px 40px;
   border-top:1px solid var(--stroke);
@@ -431,13 +550,13 @@ main{position:relative;z-index:1}
   border-color:rgba(37,99,235,.4);
   z-index:5;
 }
-.tool img{
+.tool img,.tool svg{
   width:38px;height:38px;object-fit:contain;
-  filter:grayscale(100%) contrast(.88);
-  opacity:.7;
+  filter:grayscale(0) contrast(1);
+  opacity:1;
   transition:filter .35s,opacity .35s,transform .35s;
 }
-.tool:hover img{filter:grayscale(0) contrast(1);opacity:1;transform:scale(1.1)}
+.tool:hover img,.tool:hover svg{filter:grayscale(100%) contrast(.88);opacity:.7;transform:scale(1.1)}
 .tool .tool-name{
   position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
   font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;
@@ -456,7 +575,7 @@ main{position:relative;z-index:1}
   .tools-section{padding:70px 20px}
   .tools-note{text-align:left}
   .tool{width:68px;height:68px;border-radius:18px}
-  .tool img{width:30px;height:30px}
+  .tool img,.tool svg{width:30px;height:30px}
   .tool .tool-name{display:none}
 }
 /* ===== RESPONSIVE ===== */
@@ -472,7 +591,7 @@ main{position:relative;z-index:1}
   .work{min-height:auto;display:block;padding:110px 0}
   .work-track{width:auto;flex-direction:column;padding-right:0;gap:18px}
   .project{width:100%;grid-template-columns:1fr}
-  .project .img-slot{min-height:0;aspect-ratio:16/10}
+  .project .img-slot{min-height:0;max-height:200px;aspect-ratio:16/10}
   .project-body{padding:24px 10px 14px}
 }
 @media (max-width:560px){
@@ -553,7 +672,7 @@ kolaboratif.</p>
       </svg>
     </div>
     <div class="img-slot portrait">
-      <img src="" alt="Foto Muhammad Taufik Hidayat">
+      <img src=" Asset/Icon/Profil.JPG" alt="Foto Muhammad Taufik Hidayat">
       <div class="ph">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
         <span>Foto Saya</span><small>Ganti src pada &lt;img&gt;</small>
@@ -597,7 +716,7 @@ kolaboratif.</p>
   </div>
   <div class="about-grid">
     <div class="about-lead" data-blur>
-      <p>Fresh graduate DIII Sistem Informasi dari Politeknik Negeri Subang dengan <strong>IPK 3.91/4.00</strong>. Berfokus pada pengembangan web, analisis data, dan IT Support.</p>
+      <p>Fresh graduate DIII- Sistem Informasi dari Politeknik Negeri Subang dengan <strong>IPK 3.91/4.00</strong>. Berfokus pada pengembangan web, analisis data, dan IT Support.</p>
     </div>
     <!-- <div class="about-detail" data-blur>
       <p>Berpengalaman dalam pengembangan sistem berbasis web, menyiapkan dokumentasi sistem (ERD, Use Case, Flowchart), menangani laporan, dan mendukung kegiatan administratif.</p>
@@ -630,19 +749,19 @@ kolaboratif.</p>
     <article class="edu-card glass spotlight tilt" data-reveal-item>
       <div class="edu-top">
         <div class="img-slot logo-slot">
-          <img src="" alt="Logo Politeknik Negeri Subang">
+          <img src="Asset/Icon/politeknik negeri subang.jpeg" alt="Logo Politeknik Negeri Subang">
           <div class="ph"><span>Logo</span></div>
         </div>
         <span class="edu-year">Agu 2023 — Jul 2026</span>
       </div>
-      <h3><strong>DIII</strong> Sistem Informasi</h3>
+      <h3><strong>DIII -</strong> Sistem Informasi</h3>
       <p class="edu-inst">Politeknik Negeri Subang</p>
       <div class="edu-foot"><span>IPK 3.91 / 4.00</span><span>Anggota PKM</span></div>
     </article>
     <article class="edu-card glass spotlight tilt" data-reveal-item>
       <div class="edu-top">
         <div class="img-slot logo-slot">
-          <img src="" alt="Logo SMAN 2 Subang">
+          <img src="Asset/Icon/SMAN 2 subang.webp" alt="Logo SMAN 2 Subang">
           <div class="ph"><span>Logo</span></div>
         </div>
         <span class="edu-year">Agu 2019 — Jul 2022</span>
@@ -669,7 +788,7 @@ kolaboratif.</p>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/codeigniter" alt="CodeIgniter"><span class="tool-name">CodeIgniter</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/javascript" alt="JavaScript"><span class="tool-name">JavaScript</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/html5" alt="HTML5"><span class="tool-name">HTML5</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/css3" alt="CSS3"><span class="tool-name">CSS3</span></div>
+        <div class="tool" data-float><img src="https://cdn.simpleicons.org/css" alt="CSS3"><span class="tool-name">CSS3</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/react" alt="React"><span class="tool-name">React</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/mysql" alt="MySQL"><span class="tool-name">MySQL</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/git" alt="Git"><span class="tool-name">Git</span></div>
@@ -679,15 +798,15 @@ kolaboratif.</p>
     <!-- Baris 2: Data & Office -->
     <div class="tools-row" data-direction="1" data-speed="34">
       <div class="tools-row-inner">
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/microsoftexcel" alt="Excel"><span class="tool-name">Excel</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/microsoftword" alt="Word"><span class="tool-name">Word</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/microsoftpowerpoint" alt="PowerPoint"><span class="tool-name">PowerPoint</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/microsoftaccess" alt="MS Access"><span class="tool-name">MS Access</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/microsoftoutlook" alt="Outlook"><span class="tool-name">Outlook</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/powerbi" alt="Power BI"><span class="tool-name">Power BI</span></div>
+        <div class="tool" data-float><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Excel"><path fill="#217346" d="M23 1.5q.41 0 .7.3.3.29.3.7v19q0 .41-.3.7-.29.3-.7.3H7q-.41 0-.7-.3-.3-.29-.3-.7V18H1q-.41 0-.7-.3-.3-.29-.3-.7V7q0-.41.3-.7Q.58 6 1 6h5V2.5q0-.41.3-.7.29-.3.7-.3zM6 13.28l1.42 2.66h2.14l-2.38-3.87 2.34-3.8H7.46l-1.3 2.4-.05.08-.04.09-.64-1.28-.66-1.29H2.59l2.27 3.82-2.48 3.85h2.16zM14.25 21v-3H7.5v3zm0-4.5v-3.75H12v3.75zm0-5.25V7.5H12v3.75zm0-5.25V3H7.5v3zm8.25 15v-3h-6.75v3zm0-4.5v-3.75h-6.75v3.75zm0-5.25V7.5h-6.75v3.75zm0-5.25V3h-6.75v3Z"/></svg><span class="tool-name">Excel</span></div>
+        <div class="tool" data-float><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Word"><path fill="#2B579A" d="M23.004 1.5q.41 0 .703.293t.293.703v19.008q0 .41-.293.703t-.703.293H6.996q-.41 0-.703-.293T6 21.504V18H.996q-.41 0-.703-.293T0 17.004V6.996q0-.41.293-.703T.996 6H6V2.496q0-.41.293-.703t.703-.293zM6.035 11.203l1.442 4.735h1.64l1.57-7.876H9.036l-.937 4.653-1.325-4.5H5.38l-1.406 4.523-.938-4.675H1.312l1.57 7.874h1.641zM22.5 21v-3h-15v3zm0-4.5v-3.75H12v3.75zm0-5.25V7.5H12v3.75zm0-5.25V3h-15v3Z"/></svg><span class="tool-name">Word</span></div>
+        <div class="tool" data-float><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PowerPoint"><path fill="#D24726" d="M13.5 1.5q1.453 0 2.795.375 1.342.375 2.508 1.06 1.166.686 2.12 1.641.956.955 1.641 2.121.686 1.166 1.061 2.508Q24 10.547 24 12q0 1.453-.375 2.795-.375 1.342-1.06 2.508-.686 1.166-1.641 2.12-.955.956-2.121 1.641-1.166.686-2.508 1.061-1.342.375-2.795.375-1.29 0-2.52-.305-1.23-.304-2.337-.884-1.108-.58-2.063-1.418-.955-.838-1.693-1.893H.997q-.411 0-.704-.293T0 17.004V6.996q0-.41.293-.703T.996 6h3.89q.739-1.055 1.694-1.893.955-.837 2.063-1.418 1.107-.58 2.337-.884Q12.21 1.5 13.5 1.5zm.75 1.535v8.215h8.215q-.14-1.64-.826-3.076-.686-1.436-1.782-2.531-1.095-1.096-2.537-1.782-1.441-.685-3.07-.826zm-5.262 7.57q0-.68-.228-1.166-.229-.486-.627-.79-.399-.305-.938-.446-.539-.14-1.172-.14H2.848v7.863h1.84v-2.742H5.93q.574 0 1.119-.17t.978-.493q.434-.322.698-.802.263-.48.263-1.114zM13.5 21q1.172 0 2.262-.287t2.056-.82q.967-.534 1.776-1.278.808-.744 1.418-1.664.61-.92.984-1.986.375-1.067.469-2.227h-9.703V3.035q-1.735.14-3.27.908T6.797 6h4.207q.41 0 .703.293t.293.703v10.008q0 .41-.293.703t-.703.293H6.797q.644.715 1.412 1.271.768.557 1.623.944.855.387 1.781.586Q12.54 21 13.5 21zM5.812 9.598q.575 0 .915.228.34.229.34.838 0 .27-.124.44-.123.17-.31.275-.188.105-.422.146-.234.041-.445.041H4.687V9.598Z"/></svg><span class="tool-name">PowerPoint</span></div>
+        <div class="tool" data-float><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MS Access"><path fill="#A4373A" d="M15 .75q1.605 0 3.21.176.282.035.815.111.534.076 1.178.211.645.135 1.318.328.674.194 1.225.457.55.264.902.598.352.334.352.744v17.25q0 .41-.352.744-.351.334-.902.598-.55.263-1.225.457-.673.193-1.318.328-.644.135-1.178.217-.533.082-.814.105-1.606.176-3.211.176-1.617 0-3.21-.176-.282-.023-.815-.105-.534-.082-1.178-.217-.645-.135-1.318-.328-.674-.194-1.225-.457-.55-.264-.902-.598Q6 21.035 6 20.625V18H.996q-.41 0-.703-.293T0 17.004V6.996q0-.41.293-.703T.996 6H6V3.375q0-.41.352-.744.351-.334.902-.598.55-.263 1.225-.457.673-.193 1.318-.328.644-.135 1.178-.21.533-.077.814-.112Q13.383.75 15 .75zm0 1.5q-.762 0-1.7.053-.937.052-1.904.181-.966.13-1.88.346-.914.217-1.618.545.727.34 1.635.557.908.216 1.863.34.956.123 1.887.175.932.053 1.717.053t1.717-.053q.931-.052 1.887-.176.955-.123 1.863-.34.908-.216 1.635-.556-.704-.328-1.618-.545-.914-.217-1.88-.346-.967-.129-1.905-.181Q15.762 2.25 15 2.25zM4.723 14.145h2.543l.597 1.793h2.004l-2.87-7.876H5.038l-2.906 7.876h1.992zM22.5 20.379v-3.55q-.773.339-1.729.562-.955.222-1.962.357-1.008.135-1.993.193Q15.832 18 15 18q-.855 0-1.705-.053-.85-.052-1.693-.146-.27.199-.598.199H7.5v2.379q.34.27.914.48.574.211 1.272.364.697.152 1.459.252.761.1 1.482.164.72.064 1.342.088.62.023 1.031.023.41 0 1.031-.023.621-.024 1.342-.088.72-.065 1.482-.164.762-.1 1.46-.252.697-.153 1.27-.364.575-.21.915-.48zm0-5.227v-4.324q-.773.34-1.729.563-.955.222-1.962.357-1.008.135-1.993.193Q15.832 12 15 12q-.75 0-1.5-.041t-1.5-.111v4.5q.75.082 1.5.117t1.5.035q.434 0 1.055-.023.62-.024 1.33-.088.709-.065 1.459-.164.75-.1 1.441-.252.692-.153 1.272-.352.58-.2.943-.469zm0-6V4.828q-.773.34-1.729.563-.955.222-1.962.357-1.008.135-1.993.193Q15.832 6 15 6q-.832 0-1.816-.059-.985-.058-1.993-.193-1.007-.135-1.962-.357-.956-.223-1.729-.563V6h3.504q.41 0 .703.293t.293.703v3.352q.75.082 1.5.117t1.5.035q.434 0 1.055-.023.62-.024 1.33-.088.709-.065 1.459-.164.75-.1 1.441-.252.692-.153 1.266-.352.574-.2.949-.469zm-17.32 3.47l.808-2.45.785 2.45Z"/></svg><span class="tool-name">MS Access</span></div>
+        <div class="tool" data-float><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Outlook"><path fill="#0078D4" d="M7.88 12.04q0 .45-.11.87-.1.41-.33.74-.22.33-.58.52-.37.2-.87.2t-.85-.2q-.35-.21-.57-.55-.22-.33-.33-.75-.1-.42-.1-.86t.1-.87q.1-.43.34-.76.22-.34.59-.54.36-.2.87-.2t.86.2q.35.21.57.55.22.34.31.77.1.43.1.88zM24 12v9.38q0 .46-.33.8-.33.32-.8.32H7.13q-.46 0-.8-.33-.32-.33-.32-.8V18H1q-.41 0-.7-.3-.3-.29-.3-.7V7q0-.41.3-.7Q.58 6 1 6h6.5V2.55q0-.44.3-.75.3-.3.75-.3h12.9q.44 0 .75.3.3.3.3.75V10.85l1.24.72h.01q.1.07.18.18.07.12.07.25zm-6-8.25v3h3v-3zm0 4.5v3h3v-3zm0 4.5v1.83l3.05-1.83zm-5.25-9v3h3.75v-3zm0 4.5v3h3.75v-3zm0 4.5v2.03l2.41 1.5 1.34-.8v-2.73zM9 3.75V6h2l.13.01.12.04v-2.3zM5.98 15.98q.9 0 1.6-.3.7-.32 1.19-.86.48-.55.73-1.28.25-.74.25-1.61 0-.83-.25-1.55-.24-.71-.71-1.24t-1.15-.83q-.68-.3-1.55-.3-.92 0-1.64.3-.71.3-1.2.85-.5.54-.75 1.3-.25.74-.25 1.63 0 .85.26 1.56.26.72.74 1.23.48.52 1.17.81.69.3 1.56.3zM7.5 21h12.39L12 16.08V17q0 .41-.3.7-.29.3-.7.3H7.5zm15-.13v-7.24l-5.9 3.54Z"/></svg><span class="tool-name">Outlook</span></div>
+        <div class="tool" data-float><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power BI"><path fill="#F2C811" d="M10 12a1 1 0 0 1 1 1v11H4a1 1 0 0 1-1-1V13a1 1 0 0 1 1-1h6Zm-2-.5V7a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v17h-4.5V13a1.5 1.5 0 0 0-1.5-1.5H8Zm5-6V1a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1h-3.5V7A1.5 1.5 0 0 0 15 5.5h-2Z"/></svg><span class="tool-name">Power BI</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/figma" alt="Figma"><span class="tool-name">Figma</span></div>
         <div class="tool" data-float><img src="https://cdn.simpleicons.org/linux" alt="Linux"><span class="tool-name">Linux</span></div>
-        <div class="tool" data-float><img src="https://cdn.simpleicons.org/windows" alt="Windows"><span class="tool-name">Windows</span></div>
+        <div class="tool" data-float><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23F25022' d='M1 1h10.2v10.2H1z'/%3E%3Cpath fill='%237FBA00' d='M12.8 1H23v10.2H12.8z'/%3E%3Cpath fill='%2300A4EF' d='M1 12.8h10.2V23H1z'/%3E%3Cpath fill='%23FFB900' d='M12.8 12.8H23V23H12.8z'/%3E%3C/svg%3E" alt="Windows"><span class="tool-name">Windows</span></div>
       </div>
     </div>
   </div>
@@ -704,9 +823,13 @@ kolaboratif.</p>
     <div class="work-track">
 
       <!-- Proyek 1 -->
-      <article class="project glass spotlight" data-cursor="Lihat">
+      <article class="project glass spotlight" data-cursor="Lihat" data-cert-open
+        data-title="Smart IT Helpdesk System terintegrasi AI Chatbot dengan metode SAW"
+        data-issuer="Laravel"
+        data-year="Agu 2025 — Jan 2026"
+        data-images="Asset/Projek/IT Helpdesk -1.png|Asset/Projek/IT Helpdesk -2.png|Asset/Projek/IT Helpdesk -3.png|Asset/Projek/IT Helpdesk -4.png">
         <div class="img-slot">
-          <img src="" alt="Screenshot Smart IT Helpdesk">
+          <img src="Asset/Projek/IT Helpdesk -1.png" alt="Screenshot Smart IT Helpdesk">
           <div class="ph"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Gambar Proyek 01</span></div>
         </div>
         <div class="project-body">
@@ -716,12 +839,24 @@ kolaboratif.</p>
           <p class="project-desc">Sistem helpdesk berbasis web untuk mengelola tiket permasalahan IT. Terintegrasi chatbot AI dan metode SAW untuk menentukan prioritas penanganan tiket. Tugas akhir di PT Indobuzz.</p>
           <a href="#" class="project-link">Lihat detail <span>↗</span></a>
         </div>
+        <div class="project-full-desc" hidden>
+          <p>Smart IT Helpdesk adalah sistem informasi helpdesk berbasis web yang digunakan untuk mengelola dan memantau tiket permasalahan IT, dilengkapi integrasi chatbot AI serta metode SAW untuk menentukan prioritas penanganan tiket. Tugas akhir di PT Indobuzz Republik Digital.</p>
+          <ul>
+            <li>Memastikan project yang dibuat baik dari segi dokumen, design dan implementasi frontend &amp; backend sesuai dengan rencana dan waktu yang telah ditentukan.</li>
+            <li>Melakukan implementasi backend sesuai dengan fitur yang telah dirancang seperti penentuan parameter prioritas penanganan, pengelolaan data FAQ serta parameter input untuk data jawaban chatbot AI terkait permasalahan yang dialami user.</li>
+          </ul>
+        </div>
       </article>
 
       <!-- Proyek 2 -->
-      <article class="project glass spotlight" data-cursor="Lihat">
+      <article class="project glass spotlight" data-cursor="Lihat" data-cert-open
+        data-title="Website WarisanBanceuy.com untuk Desa Adat Banceuy"
+        data-issuer="Laravel"
+        data-year="Mar — Jul 2026"
+        data-url="https://warisanbanceuy.com"
+        data-images="Asset/Projek/Banceuy 1.png|Asset/Projek/Banceuy 2-.png|Asset/Projek/Banceuy 3.png|Asset/Projek/Banceuy 4.png">
         <div class="img-slot">
-          <img src="" alt="Screenshot WarisanBanceuy.com">
+          <img src="Asset/Projek/Banceuy 1.png" alt="Screenshot WarisanBanceuy.com">
           <div class="ph"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Gambar Proyek 02</span></div>
         </div>
         <div class="project-body">
@@ -729,14 +864,28 @@ kolaboratif.</p>
           <h3>Warisan<strong>Banceuy</strong>.com</h3>
           <p class="project-meta">Fullstack · Mar — Jul 2026</p>
           <p class="project-desc">Platform informasi dan promosi Desa Adat Banceuy, Subang. Dashboard admin mengelola paket wisata, keuangan, dan pemesanan. Fitur info homestay, kuliner, dan budaya lokal.</p>
-          <a href="#" class="project-link">Lihat detail <span>↗</span></a>
+          <div class="project-actions">
+            <a href="#" class="project-link">Lihat detail <span>↗</span></a>
+            <a class="project-link project-link-ext" href="https://warisanbanceuy.com" target="_blank" rel="noopener">Kunjungi website <span>↗</span></a>
+          </div>
+        </div>
+        <div class="project-full-desc" hidden>
+          <p>WarisanBanceuy.com adalah website informasi dan promosi destinasi wisata Banceuy yang menyediakan informasi mengenai paket wisata, homestay, kuliner, serta potensi budaya dan daya tarik wisata lokal.</p>
+          <ul>
+            <li>Memastikan project yang dibuat baik dari segi dokumen, design dan implementasi frontend &amp; backend sesuai dengan kebutuhan dari mitra, dalam hal ini Kampung Adat Banceuy.</li>
+            <li>Membuat fitur admin meliputi pengelolaan dashboard, paket wisata, pencatatan keuangan dan pemesanan.</li>
+          </ul>
         </div>
       </article>
 
       <!-- Proyek 3 -->
-      <article class="project glass spotlight" data-cursor="Lihat">
+      <article class="project glass spotlight" data-cursor="Lihat" data-cert-open
+        data-title="Website E-Commerce Jastru.id"
+        data-issuer="Laravel"
+        data-year="Mar — Jun 2024"
+        data-images="Asset/Projek/Jastru 1.png|Asset/Projek/Jastru 2.png|Asset/Projek/Jastru 3.png">
         <div class="img-slot">
-          <img src="" alt="Screenshot Jastru.id">
+          <img src="Asset/Projek/Jastru 1.png" alt="Screenshot Jastru.id">
           <div class="ph"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Gambar Proyek 03</span></div>
         </div>
         <div class="project-body">
@@ -746,12 +895,23 @@ kolaboratif.</p>
           <p class="project-desc">Marketplace produk dan jasa. Mengimplementasikan backend, API Nominatim (lokasi), Midtrans (pembayaran), OAuth Google/Facebook, fitur transaksi, voucher, dan chat.</p>
           <a href="#" class="project-link">Lihat detail <span>↗</span></a>
         </div>
+        <div class="project-full-desc" hidden>
+          <p>JASTRU.ID adalah platform marketplace berbasis web yang menghubungkan penjual dan pembeli untuk transaksi produk dan jasa, dilengkapi fitur pencarian berdasarkan lokasi, pemesanan, pembayaran, chat, voucher, dan pengelolaan transaksi. Mitra: PT Indobuzz Republik Digital.</p>
+          <ul>
+            <li>Memastikan project yang dibuat baik dari segi dokumen, design dan implementasi frontend &amp; backend sesuai dengan rencana dan waktu yang telah ditentukan.</li>
+            <li>Melakukan implementasi backend sesuai dengan fitur yang telah dirancang seperti penggunaan API Nominatim untuk lokasi, Midtrans untuk pembayaran, login dengan Google maupun Facebook dengan OAuth, dan fitur lainnya.</li>
+          </ul>
+        </div>
       </article>
 
       <!-- Proyek 4 -->
-      <article class="project glass spotlight" data-cursor="Lihat">
+      <article class="project glass spotlight" data-cursor="Lihat" data-cert-open
+        data-title="Sistem Informasi Pengelolaan Stok dan Penjualan Toko Sembako"
+        data-issuer="PHP Native"
+        data-year="Agu — Des 2024"
+        data-images="Asset/Projek/Sembako jafa 1.png|Asset/Projek/Sembako jafa 2.png">
         <div class="img-slot">
-          <img src="" alt="Screenshot Jafa Sembako">
+          <img src="Asset/Projek/Sembako jafa 1.png" alt="Screenshot Jafa Sembako">
           <div class="ph"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Gambar Proyek 04</span></div>
         </div>
         <div class="project-body">
@@ -761,12 +921,23 @@ kolaboratif.</p>
           <p class="project-desc">Sistem informasi berbasis web untuk mengelola stok barang, mencatat barang masuk/keluar, dan memantau ketersediaan produk secara terstruktur pada mitra Jafa Sembako.</p>
           <a href="#" class="project-link">Lihat detail <span>↗</span></a>
         </div>
+        <div class="project-full-desc" hidden>
+          <p>Sistem Pengelolaan Stok Jafa Sembako adalah sistem informasi berbasis web untuk membantu mengelola stok barang, pencatatan barang masuk dan keluar, serta memantau ketersediaan produk secara lebih terstruktur dan efisien.</p>
+          <ul>
+            <li>Memastikan project yang dibuat baik dari segi dokumen, design dan implementasi frontend &amp; backend sesuai dengan rencana dan waktu yang telah ditentukan.</li>
+            <li>Melakukan implementasi backend sesuai dengan fitur yang telah dirancang seperti penggunaan API Nominatim untuk lokasi, Midtrans untuk pembayaran, login dengan Google maupun Facebook dengan OAuth, dan fitur lainnya.</li>
+          </ul>
+        </div>
       </article>
 
       <!-- Proyek 5 -->
-      <article class="project glass spotlight" data-cursor="Lihat">
+      <article class="project glass spotlight" data-cursor="Lihat" data-cert-open
+        data-title="Aplikasi Desktop Pengelolaan Barang dan Penjualan Toko Kosmetik"
+        data-issuer="MS Access"
+        data-year="Des 2024"
+        data-images="Asset/Projek/Kosmetik 1.png|Asset/Projek/Kosmetik 2.png">
         <div class="img-slot">
-          <img src="" alt="Screenshot MS Access Kosmetik">
+          <img src="Asset/Projek/Kosmetik 1.png" alt="Screenshot MS Access Kosmetik">
           <div class="ph"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Gambar Proyek 05</span></div>
         </div>
         <div class="project-body">
@@ -776,12 +947,23 @@ kolaboratif.</p>
           <p class="project-desc">Aplikasi desktop pengelolaan barang dan penjualan toko kosmetik. Membuat database relasional, query kalkulasi harga, desain UI, dan packaging menggunakan Switchboard MS Access.</p>
           <a href="#" class="project-link">Lihat detail <span>↗</span></a>
         </div>
+        <div class="project-full-desc" hidden>
+          <ul>
+            <li>Membuat database dan tabel yang diperlukan serta mengatur relasi antar tabel.</li>
+            <li>Membuat query untuk penerapan perhitungan pembelian dan harga dalam aplikasi yang dibuat.</li>
+            <li>Melakukan desain tampilan aplikasi dan mengubah database MS Access menjadi aplikasi desktop dengan menggunakan Switchboard dan package builder.</li>
+          </ul>
+        </div>
       </article>
 
       <!-- Proyek 6 -->
-      <article class="project glass spotlight" data-cursor="Lihat">
+      <article class="project glass spotlight" data-cursor="Lihat" data-cert-open
+        data-title="Aplikasi Pencatatan Keuangan UMKM berbasis VBA"
+        data-issuer="Microsoft VBA"
+        data-year="Jan — Jun 2024"
+        data-images="Asset/Projek/Vba 1.png|Asset/Projek/Vba 2.png">
         <div class="img-slot">
-          <img src="" alt="Screenshot VBA Keuangan">
+          <img src="Asset/Projek/Vba 1.png" alt="Screenshot VBA Keuangan">
           <div class="ph"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Gambar Proyek 06</span></div>
         </div>
         <div class="project-body">
@@ -790,6 +972,12 @@ kolaboratif.</p>
           <p class="project-meta">Ketua Tim · Jan — Jun 2024</p>
           <p class="project-desc">Aplikasi pencatatan keuangan berbasis VBA (Virtual Basic Application). Melakukan wawancara kebutuhan pengguna, merancang UI di Figma, dan mengimplementasikannya ke dalam Excel VBA.</p>
           <a href="#" class="project-link">Lihat detail <span>↗</span></a>
+        </div>
+        <div class="project-full-desc" hidden>
+          <ul>
+            <li>Bekerja sama dengan anggota tim dengan melakukan wawancara kebutuhan pengguna, merencanakan pembuatan aplikasi, dan membuat aplikasi.</li>
+            <li>Bekerja sama dengan anggota tim dengan melakukan desain pada tools Figma dan mengimplementasikannya pada aplikasi yang dibuat.</li>
+          </ul>
         </div>
       </article>
 
@@ -806,16 +994,24 @@ kolaboratif.</p>
   <div class="xp-list" data-reveal-group>
 
     <article class="xp-row glass spotlight tilt" data-reveal-item>
-      <div class="img-slot logo-slot"><img src="" alt="Logo Indobuzz"><div class="ph"><span>Logo</span></div></div>
+      <div class="img-slot logo-slot"><img src="Asset/Icon/indobuzz-logo.webp" alt="Logo Indobuzz"><div class="ph"><span>Logo</span></div></div>
       <div class="xp-copy">
         <p class="xp-meta">Agu 2025 — Jan 2026 · Subang</p>
         <h3><strong>Programmer Intern</strong> — PT Indobuzz Republik Digital</h3>
         <p>Mendokumentasikan sistem (ERD, Use Case, Flowchart), mengimplementasikan fitur backend, mengintegrasikan payment gateway & pengiriman, serta menyusun laporan proyek.</p>
+        <button class="xp-cert-btn" type="button" data-cursor="Lihat" data-cert-open
+          data-title="Sertifikat Kompetensi PKL"
+          data-issuer="PT Indobuzz Republik Digital"
+          data-year="2026"
+          data-desc="Sertifikat Praktik Kerja Lapangan sebagai Programmer di PT Indobuzz Republik Digital, terhitung 4 Agustus 2025 sampai 9 Januari 2026 (6 bulan)."
+          data-images="Asset/Sertifikat/PKL.jpeg">
+          Lihat sertifikat
+        </button>
       </div>
     </article>
 
     <article class="xp-row glass spotlight tilt" data-reveal-item>
-      <div class="img-slot logo-slot"><img src="" alt="Logo MABIM"><div class="ph"><span>Logo</span></div></div>
+      <div class="img-slot logo-slot"><img src="Asset/Icon/politeknik negeri subang.jpeg" alt="Logo Politeknik Negeri Subang"><div class="ph"><span>Logo</span></div></div>
       <div class="xp-copy">
         <p class="xp-meta">Feb — Agu 2024 · Politeknik Negeri Subang</p>
         <h3><strong>Sekretaris 2</strong> — MABIM JTIK</h3>
@@ -824,7 +1020,7 @@ kolaboratif.</p>
     </article>
 
     <article class="xp-row glass spotlight tilt" data-reveal-item>
-      <div class="img-slot logo-slot"><img src="" alt="Logo JTIK Cup"><div class="ph"><span>Logo</span></div></div>
+      <div class="img-slot logo-slot"><img src="Asset/Icon/politeknik negeri subang.jpeg" alt="Logo Politeknik Negeri Subang"><div class="ph"><span>Logo</span></div></div>
       <div class="xp-copy">
         <p class="xp-meta">Agu — Sep 2024 · Politeknik Negeri Subang</p>
         <h3><strong>Ketua Pelaksana</strong> — JTIK Cup</h3>
@@ -833,7 +1029,7 @@ kolaboratif.</p>
     </article>
 
     <article class="xp-row glass spotlight tilt" data-reveal-item>
-      <div class="img-slot logo-slot"><img src="" alt="Logo LATKOM"><div class="ph"><span>Logo</span></div></div>
+      <div class="img-slot logo-slot"><img src="Asset/Icon/politeknik negeri subang.jpeg" alt="Logo Politeknik Negeri Subang"><div class="ph"><span>Logo</span></div></div>
       <div class="xp-copy">
         <p class="xp-meta">Sep — Okt 2024 · Politeknik Negeri Subang</p>
         <h3><strong>Sekretaris 1</strong> — LATKOM</h3>
@@ -851,36 +1047,100 @@ kolaboratif.</p>
     <h2 class="section-title" data-split>Lisensi &amp; <strong>Sertifikasi</strong>.</h2>
   </div>
   <div class="cert-grid" data-reveal-group>
-    <div class="cert-card glass spotlight tilt" data-reveal-item>
-      <div class="cert-year">2026</div>
-      <div class="cert-title">Associate Data Analyst</div>
-      <div class="cert-issuer">BNSP</div>
-    </div>
-    <div class="cert-card glass spotlight tilt" data-reveal-item>
-      <div class="cert-year">2023</div>
-      <div class="cert-title">Microsoft Office Specialist: Excel Associate</div>
-      <div class="cert-issuer">Microsoft</div>
-    </div>
-    <div class="cert-card glass spotlight tilt" data-reveal-item>
-      <div class="cert-year">2026</div>
-      <div class="cert-title">TOEIC (Score: 610)</div>
-      <div class="cert-issuer">ETS</div>
-    </div>
-    <div class="cert-card glass spotlight tilt" data-reveal-item>
-      <div class="cert-year">2026</div>
-      <div class="cert-title">RevolU Certified Online Course</div>
-      <div class="cert-issuer">RevolU</div>
-    </div>
-    <div class="cert-card glass spotlight tilt" data-reveal-item>
-      <div class="cert-year">2026</div>
-      <div class="cert-title">IT Service Desk Careers and Certifications</div>
-      <div class="cert-issuer">LinkedIn Learning</div>
-    </div>
-    <div class="cert-card glass spotlight tilt" data-reveal-item>
-      <div class="cert-year">2026</div>
-      <div class="cert-title">Must-Have Tools for IT Support</div>
-      <div class="cert-issuer">LinkedIn Learning</div>
-    </div>
+    <article class="cert-card glass spotlight tilt" data-reveal-item data-cursor="Lihat" tabindex="0" role="button"
+      data-title="Associate Data Analyst"
+      data-issuer="BNSP"
+      data-year="2026"
+      data-desc="Sertifikasi kompetensi Associate Data Analyst dari Badan Nasional Sertifikasi Profesi (BNSP). Gambar sertifikat masih dalam proses dan akan ditambahkan."
+      data-images="">
+      <div class="cert-thumb cert-thumb--empty"><span>Gambar belum tersedia</span></div>
+      <div class="cert-body">
+        <div class="cert-title">Associate Data Analyst</div>
+        <div class="cert-issuer">BNSP</div>
+        <div class="cert-year">2026</div>
+      </div>
+    </article>
+
+    <article class="cert-card glass spotlight tilt" data-reveal-item data-cursor="Lihat" tabindex="0" role="button"
+      data-title="Microsoft Office Specialist: Excel 2019 Associate"
+      data-issuer="Microsoft · Certiport"
+      data-year="2023"
+      data-desc="Sertifikat MOS Excel 2019 Associate, diraih pada 3 Oktober 2023. Skor ujian 825 dari passing score 700 (lulus). Meliputi pengelolaan worksheet, sel dan rentang, tabel, rumus, serta chart. Popup ini menampilkan sertifikat resmi dan laporan skor Certiport."
+      data-images="Asset/Sertifikat/Excel 1.jpeg|Asset/Sertifikat/Excel 2.jpeg">
+      <div class="cert-thumb">
+        <img src="Asset/Sertifikat/Excel 1.jpeg" alt="Sertifikat Microsoft Excel Associate">
+        <span class="cert-badge">2 gambar</span>
+      </div>
+      <div class="cert-body">
+        <div class="cert-title">Microsoft Office Specialist: Excel Associate</div>
+        <div class="cert-issuer">Microsoft</div>
+        <div class="cert-year">2023</div>
+      </div>
+    </article>
+
+    <article class="cert-card glass spotlight tilt" data-reveal-item data-cursor="Lihat" tabindex="0" role="button"
+      data-title="TOEIC Listening and Reading"
+      data-issuer="ETS"
+      data-year="2026"
+      data-desc="Official Institutional Score Report TOEIC dengan total skor 610 (Listening 325, Reading 285). Tes dilaksanakan 20 Juli 2026 di Politeknik Negeri Subang dan berlaku hingga 20 Juli 2028."
+      data-images="Asset/Sertifikat/Toeic.png">
+      <div class="cert-thumb">
+        <img src="Asset/Sertifikat/Toeic.png" alt="Sertifikat TOEIC">
+      </div>
+      <div class="cert-body">
+        <div class="cert-title">TOEIC (Score: 610)</div>
+        <div class="cert-issuer">ETS</div>
+        <div class="cert-year">2026</div>
+      </div>
+    </article>
+
+    <article class="cert-card glass spotlight tilt" data-reveal-item data-cursor="Lihat" tabindex="0" role="button"
+      data-title="Intro to Data Analytics — Mini Course"
+      data-issuer="RevoU"
+      data-year="2026"
+      data-desc="Sertifikat penyelesaian Mini Course Intro to Data Analytics dari RevoU, program daring 1 minggu. Diterbitkan 21 Agustus 2026 dengan nomor sertifikat DAMC-170826-0F-I-00610."
+      data-images="Asset/Sertifikat/Revou.jpeg">
+      <div class="cert-thumb">
+        <img src="Asset/Sertifikat/Revou.jpeg" alt="Sertifikat RevoU">
+      </div>
+      <div class="cert-body">
+        <div class="cert-title">RevoU Certified Online Course</div>
+        <div class="cert-issuer">RevoU</div>
+        <div class="cert-year">2026</div>
+      </div>
+    </article>
+
+    <article class="cert-card glass spotlight tilt" data-reveal-item data-cursor="Lihat" tabindex="0" role="button"
+      data-title="IT Service Desk Careers and Certifications"
+      data-issuer="LinkedIn Learning"
+      data-year="2026"
+      data-desc="Kursus LinkedIn Learning tentang jalur karier dan sertifikasi IT Service Desk. Diselesaikan 4 September 2026 (39 menit), dengan topik Career Path Planning."
+      data-images="Asset/Sertifikat/IT service.jpeg">
+      <div class="cert-thumb">
+        <img src="Asset/Sertifikat/IT service.jpeg" alt="Sertifikat IT Service Desk">
+      </div>
+      <div class="cert-body">
+        <div class="cert-title">IT Service Desk Careers and Certifications</div>
+        <div class="cert-issuer">LinkedIn Learning</div>
+        <div class="cert-year">2026</div>
+      </div>
+    </article>
+
+    <article class="cert-card glass spotlight tilt" data-reveal-item data-cursor="Lihat" tabindex="0" role="button"
+      data-title="Must-Have Tools for IT Support: Remote Access, AI, and Troubleshooting"
+      data-issuer="LinkedIn Learning · Pearson"
+      data-year="2026"
+      data-desc="Kursus LinkedIn Learning bersama Pearson tentang perangkat wajib IT Support. Diselesaikan 4 September 2026 (1 jam 1 menit), mencakup Troubleshooting, Help Desk Support, dan Remote Access."
+      data-images="Asset/Sertifikat/Must have.jpeg">
+      <div class="cert-thumb">
+        <img src="Asset/Sertifikat/Must have.jpeg" alt="Sertifikat Must-Have Tools for IT Support">
+      </div>
+      <div class="cert-body">
+        <div class="cert-title">Must-Have Tools for IT Support</div>
+        <div class="cert-issuer">LinkedIn Learning</div>
+        <div class="cert-year">2026</div>
+      </div>
+    </article>
   </div>
 </section>
 
@@ -888,7 +1148,7 @@ kolaboratif.</p>
 <section class="contact" id="contact">
   <p class="label" data-decrypt>06 / Kontak</p>
   <h2>
-    <span class="t-light">Punya masalah</span><br>
+    <span class="t-light">Tertarik untuk bekerjasama</span><br>
     <span class="t-bold">BUTUH</span> <em>solusi?</em>
   </h2>
   <p class="contact-sub" data-blur>Saya terbuka untuk peran System Analyst, Programmer, Data Analyst, atau IT Support. Mari bicara.</p>
@@ -896,9 +1156,18 @@ kolaboratif.</p>
   <a class="email-link" href="mailto:muhammadtaufikhidayat013@gmail.com" data-cursor="Copy">muhammadtaufikhidayat013@gmail.com <span>↗</span></a>
   
   <div class="contact-links">
-    <a href="https://www.linkedin.com/in/taufik013" target="_blank" rel="noopener">LinkedIn</a>
-    <a href="https://github.com/fik013" target="_blank" rel="noopener">GitHub</a>
-    <a href="#">Unduh CV</a>
+    <a class="contact-link-linkedin" href="https://www.linkedin.com/in/taufik013" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12M7.12 20.45H3.56V9h3.56zM22 0H2C.9 0 0 .9 0 2v20c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2"/></svg>
+      LinkedIn
+    </a>
+    <a class="contact-link-github" href="https://github.com/fik013" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3A12 12 0 0 0 8.2 23.7c.6.1.8-.26.8-.58v-2.02c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.66-.3-5.46-1.33-5.46-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.2.69.81.57A12 12 0 0 0 12 .3"/></svg>
+      GitHub
+    </a>
+    <a class="contact-link-cv" href="Asset/CV Muhamad Taufik.pdf" download="CV Muhamad Taufik.pdf">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.6V4a1 1 0 0 1 1-1M5 19a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2z"/></svg>
+      Unduh CV
+    </a>
   </div>
 </section>
 
@@ -908,6 +1177,28 @@ kolaboratif.</p>
 </footer>
 
 </main>
+
+<div class="cert-modal" id="certModal" aria-hidden="true">
+  <div class="cert-modal-backdrop" data-cert-close></div>
+  <div class="cert-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="certModalTitle">
+    <button class="cert-modal-close" type="button" data-cert-close aria-label="Tutup">×</button>
+    <div class="cert-modal-media">
+      <img id="certModalImg" alt="">
+      <p class="cert-modal-empty" id="certModalEmpty" hidden>Gambar sertifikat belum tersedia</p>
+      <div class="cert-modal-nav" id="certModalNav" hidden>
+        <button type="button" id="certPrev" aria-label="Gambar sebelumnya">‹</button>
+        <button type="button" id="certNext" aria-label="Gambar berikutnya">›</button>
+      </div>
+      <span class="cert-modal-count" id="certModalCount" hidden></span>
+    </div>
+    <div class="cert-modal-copy">
+      <p class="cert-modal-meta" id="certModalMeta"></p>
+      <h3 id="certModalTitle"></h3>
+      <div class="cert-modal-desc" id="certModalDesc"></div>
+      <a class="cert-modal-link" id="certModalLink" target="_blank" rel="noopener">Kunjungi website <span>↗</span></a>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -935,7 +1226,7 @@ if (fine) {
       if (text) {
         label.textContent = text;
         ring.classList.add('has-label');
-        gsap.to(ring, { scale: 2.3, duration: .35, ease: 'power3.out' });
+        gsap.to(ring, { scale: 1, duration: .25, ease: 'power3.out' });
         gsap.to(dot, { scale: 0, duration: .2 });
       } else {
         gsap.to(ring, { scale: 1.7, duration: .3, ease: 'power3.out' });
@@ -1256,17 +1547,35 @@ if (!reduce) {
 const mm = gsap.matchMedia();
 mm.add('(min-width: 901px) and (prefers-reduced-motion: no-preference)', () => {
   const track = document.querySelector('.work-track');
-  const getDistance = () => Math.max(0, track.scrollWidth - window.innerWidth + 64);
-  const tween = gsap.to(track, {
-    x: () => -getDistance(),
-    ease: 'none',
+  const inner = document.querySelector('.work-inner');
+  const getDistance = () => {
+    if (!track || !inner) return 0;
+    const cs = getComputedStyle(inner);
+    const visible = inner.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    return Math.max(0, track.scrollWidth - visible);
+  };
+  const tl = gsap.timeline({
     scrollTrigger: {
-      trigger: '.work', start: 'top top',
-      end: () => '+=' + getDistance(),
-      pin: true, scrub: 1, anticipatePin: 1, invalidateOnRefresh: true
+      trigger: '.work',
+      start: 'top top',
+      end: () => '+=' + (getDistance() + window.innerHeight * 0.55),
+      pin: true,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true
     }
   });
-  return () => tween.kill();
+  tl.to(track, { x: () => -getDistance(), ease: 'none', duration: 1 });
+  tl.to({}, { duration: 0.22 });
+  const refresh = () => ScrollTrigger.refresh();
+  window.addEventListener('load', refresh);
+  track.querySelectorAll('img').forEach(img => {
+    if (!img.complete) img.addEventListener('load', refresh, { once: true });
+  });
+  return () => {
+    window.removeEventListener('load', refresh);
+    tl.kill();
+  };
 });
 
 /* ============ 16. MAGNETIC ============ */
@@ -1298,7 +1607,7 @@ document.querySelectorAll('.img-slot img').forEach(img => {
 
 /* ============ 18. ROLE ROTATOR ============ */
 if (!reduce) {
-  const roles = ['System Analyst', 'Programmer', 'Data Analyst', 'Software Tester'];
+  const roles = ['System Analyst', 'Programmer', 'Data Analyst', 'Software Tester','IT Support'];
   const roleEl = document.querySelector('.role-rotator');
   let i = 0;
   if (roleEl) {
@@ -1367,6 +1676,103 @@ if (!reduce) {
   });
 }
 }
+
+/* ============ 20. CERTIFICATE MODAL ============ */
+(function initCertModal() {
+  const modal = document.getElementById('certModal');
+  if (!modal) return;
+  const img = document.getElementById('certModalImg');
+  const empty = document.getElementById('certModalEmpty');
+  const nav = document.getElementById('certModalNav');
+  const count = document.getElementById('certModalCount');
+  const prev = document.getElementById('certPrev');
+  const next = document.getElementById('certNext');
+  const title = document.getElementById('certModalTitle');
+  const meta = document.getElementById('certModalMeta');
+  const desc = document.getElementById('certModalDesc');
+  const siteLink = document.getElementById('certModalLink');
+  let images = [];
+  let index = 0;
+
+  function showImage() {
+    if (!images.length) {
+      img.hidden = true;
+      img.removeAttribute('src');
+      empty.hidden = false;
+      nav.hidden = true;
+      count.hidden = true;
+      return;
+    }
+    empty.hidden = true;
+    img.hidden = false;
+    img.src = images[index];
+    img.alt = title.textContent + (images.length > 1 ? ' — ' + (index + 1) : '');
+    const many = images.length > 1;
+    nav.hidden = !many;
+    count.hidden = !many;
+    count.textContent = (index + 1) + ' / ' + images.length;
+    prev.disabled = index === 0;
+    next.disabled = index === images.length - 1;
+  }
+
+  function openFrom(card) {
+    images = (card.dataset.images || '').split('|').map(s => s.trim()).filter(Boolean);
+    index = 0;
+    title.textContent = card.dataset.title || '';
+    meta.textContent = [card.dataset.issuer, card.dataset.year].filter(Boolean).join(' · ');
+    const extra = card.querySelector('.project-full-desc');
+    if (extra) desc.innerHTML = extra.innerHTML;
+    else desc.textContent = card.dataset.desc || '';
+    if (siteLink) {
+      if (card.dataset.url) {
+        siteLink.href = card.dataset.url;
+        siteLink.classList.add('is-visible');
+      } else {
+        siteLink.removeAttribute('href');
+        siteLink.classList.remove('is-visible');
+      }
+    }
+    showImage();
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function close() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.cert-card, [data-cert-open]').forEach(card => {
+    const open = e => {
+      e.stopPropagation();
+      openFrom(card);
+    };
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e); }
+    });
+    card.querySelectorAll('a.project-link, a.project-link-ext').forEach(a => {
+      a.addEventListener('click', e => {
+        e.stopPropagation();
+        const href = a.getAttribute('href');
+        if (!href || href === '#') e.preventDefault();
+      });
+    });
+  });
+
+  if (siteLink) siteLink.addEventListener('click', e => e.stopPropagation());
+  modal.querySelectorAll('[data-cert-close]').forEach(el => el.addEventListener('click', close));
+  prev.addEventListener('click', () => { if (index > 0) { index--; showImage(); } });
+  next.addEventListener('click', () => { if (index < images.length - 1) { index++; showImage(); } });
+  document.addEventListener('keydown', e => {
+    if (!modal.classList.contains('is-open')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft' && index > 0) { index--; showImage(); }
+    if (e.key === 'ArrowRight' && index < images.length - 1) { index++; showImage(); }
+  });
+})();
 </script>
 </body>
 </html>
