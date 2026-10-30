@@ -41,7 +41,18 @@ button{font:inherit}
 body::after{
   content:"";position:fixed;inset:0;z-index:9997;pointer-events:none;opacity:.045;
   mix-blend-mode:multiply;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Optimized noise pattern */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Performance Boosts */
+.blob, .glass, .tool, .project, .cert-card, .tilt {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+.section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
 }
 
 /* ===== CURSOR ===== */
@@ -1244,9 +1255,11 @@ if (fine) {
 /* ============ 2. DOT GRID ============ */
 (function initGrid() {
   const canvas = document.getElementById('dotGrid');
-  const ctx = canvas.getContext('2d');
-  const spacing = 34, baseRadius = 1.1, influence = 150;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const spacing = 34, baseRadius = 1.1, influence = 150, influenceSq = influence * influence;
   let points = [], mouse = { x: -9999, y: -9999 };
+  
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
@@ -1254,31 +1267,48 @@ if (fine) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     points = [];
     const cols = Math.ceil(innerWidth / spacing), rows = Math.ceil(innerHeight / spacing);
-    for (let y = 0; y <= rows; y++) for (let x = 0; x <= cols; x++)
-      points.push({ x: x*spacing, y: y*spacing, ox: x*spacing, oy: y*spacing });
+    for (let y = 0; y <= rows; y++) {
+      for (let x = 0; x <= cols; x++) {
+        points.push({ x: x*spacing, y: y*spacing, ox: x*spacing, oy: y*spacing });
+      }
+    }
   }
-  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
-  window.addEventListener('resize', resize);
+  
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; }, { passive: true });
+  window.addEventListener('resize', resize, { passive: true });
+  
   function draw() {
     ctx.clearRect(0, 0, innerWidth, innerHeight);
+    const mx = mouse.x, my = mouse.y;
+    
     for (let i = 0; i < points.length; i++) {
       const p = points[i];
-      const dx = p.ox - mouse.x, dy = p.oy - mouse.y;
-      const dist = Math.hypot(dx, dy) || 1;
+      const dx = p.ox - mx, dy = p.oy - my;
+      const distSq = dx * dx + dy * dy;
       let tx = p.ox, ty = p.oy;
-      if (dist < influence) {
-        const force = (1 - dist / influence) * 22;
-        tx += (dx / dist) * force; ty += (dy / dist) * force;
+      let r = baseRadius;
+      let alpha = 0.13;
+      let color = 'rgba(10,10,15,0.13)';
+
+      if (distSq < influenceSq) {
+        const dist = Math.sqrt(distSq) || 1;
+        const ratio = 1 - dist / influence;
+        const force = ratio * 22;
+        tx += (dx / dist) * force;
+        ty += (dy / dist) * force;
+        r = baseRadius + ratio * 2.2;
+        alpha = 0.28 + ratio * 0.55;
+        color = `rgba(37,99,235,${alpha})`;
       }
-      p.x += (tx - p.x) * 0.12; p.y += (ty - p.y) * 0.12;
-      const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
-      const r = d < influence ? baseRadius + (1 - d/influence) * 2.2 : baseRadius;
+      
+      // Easing
+      p.x += (tx - p.x) * 0.12; 
+      p.y += (ty - p.y) * 0.12;
+      
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = d < influence
-        ? `rgba(37,99,235,${.28 + (1 - d/influence) * .55})`
-        : 'rgba(10,10,15,.13)';
+      ctx.arc(p.x, p.y, r, 0, 6.28318); // Math.PI * 2
+      ctx.fillStyle = color;
       ctx.fill();
     }
     requestAnimationFrame(draw);
